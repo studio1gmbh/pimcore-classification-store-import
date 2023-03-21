@@ -1,0 +1,30 @@
+{
+  "name": "studio1/template-pimcore",
+  "type": "pimcore-bundle",
+  "license": "GPL-3.0-or-later",
+  "description": "TemplateBundle for Pimcore",
+  "authors": [
+    {
+      "name": "Studio1 Kommunikation GmbH",
+      "email": "info@studio1.de",
+      "homepage": "https://www.studio1.de/",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Studio1\\MiddlewareBundle\\": "src/"
+    }
+  },
+  "extra": {
+    "pimcore": {
+      "bundles": [
+        "Studio1\\TemplatePimcoreBundle\\TemplatePimcoreBundle"
+      ]
+    }
+  },
+  "require": {
+    "pimcore/pimcore": "^10.0",
+    "php": "^8.0"
+  }
+}

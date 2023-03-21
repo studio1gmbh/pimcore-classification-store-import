@@ -1,0 +1,23 @@
+template_pimcore:
+  :
+    tags:
+        label: Add tags
+        title: Tag selection
+        selection: Tags
+        apply: Apply tags
+        remove_and_apply: Remove and apply tags
+        success:
+            add: Added tags
+            replace: Replaced tags
+        error: No tags selected
+    move:
+        apply: Move
+        success: Asset(s) successfully moved. List will be reloaded.
+        error:
+            target: No target folder selected
+            asset: Error on moving asset(s)
+    success:
+        title: Result
+    error:
+        selection: Please select asset(s) first
+        assets: no assets selected

@@ -1,0 +1,22 @@
+template_pimcore:
+    tags:
+        label: Tags hinzufügen
+        title: Tag Auswahl
+        selection: Tags
+        apply: Tags auf ausgewählte Elemente anwenden
+        remove_and_apply: Tags auf ausgewählten Elementen entfernen und anwenden
+        success:
+            add: Tags hinzugefügt
+            replace: Tags ersetzt
+        error: keine Tags ausgewählt
+    move:
+        apply: Verschieben
+        success: Asset(s) erfolgreich verschoben. Liste wird neu geladen.
+        error:
+            target: Kein Zielverzeichnis ausgewählt
+            asset: Fehler beim Verschieben von Asset(s)
+    success:
+        title: Ergebnis
+    error:
+        selection: Bitte zuerst Asset(s) auswählen
+        assets: keine Assets ausgewählt
