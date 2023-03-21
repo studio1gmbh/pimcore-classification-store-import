@@ -1,5 +1,4 @@
-template_pimcore:
-  :
+classification_store_import:
     tags:
         label: Add tags
         title: Tag selection

@@ -10,11 +10,11 @@
  *  @license    https://www.gnu.org/licenses/gpl-3.0.txt
  */
 
-namespace Studio1\TemplatePimcoreBundle;
+namespace Studio1\ClassificationStoreImportBundle;
 
 use Pimcore\Extension\Bundle\AbstractPimcoreBundle;
 
-class TemplatePimcoreBundle extends AbstractPimcoreBundle
+class ClassificationStoreImportBundle extends AbstractPimcoreBundle
 {
     public function getVersion()
     {

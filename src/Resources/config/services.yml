@@ -11,13 +11,23 @@ services:
 
     # controllers are imported separately to make sure they're public
     # and have a tag that allows actions to type-hint services
-    Studio1\TemplatePimcorenBundle\Controller\:
+    Studio1\ClassificationStoreImportBundle\Controller\:
         resource: '../../Controller'
         public: true
         tags: [ 'controller.service_arguments' ]
 
+    # auto-register all commands as services
+    Studio1\ClassificationStoreImportBundle\Command\:
+        resource: ../../Command/
+
+    # auto-register all message handler as services
+    Studio1\ClassificationStoreImportBundle\Message\Handler\:
+        resource: '../../Message/Handler/*'
+        public: true
+        tags: [ name: messenger.message_handler ]
+
 # add more services, or override services that need manual wiring
-#    Studio1\TemplatePimcorenBundle\ExampleClass:
+#    Studio1\ClassificationStoreImportnBundle\ExampleClass:
 #        arguments:
 #            - "@service_id"
 #            - "plain_value"
