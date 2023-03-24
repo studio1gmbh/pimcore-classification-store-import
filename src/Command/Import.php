@@ -1,25 +1,30 @@
 <?php
+
 /**
- * Created by PhpStorm.
- * User: jneugebauer
- * Date: 21.03.23
- * Time: 13:07
+ * Studio1 Kommunikation GmbH
+ *
+ * This source file is available under following license:
+ * - GNU General Public License v3.0 (GNU GPLv3)
+ *
+ *  @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
+ *  @license    https://www.gnu.org/licenses/gpl-3.0.txt
  */
 
 namespace Studio1\ClassificationStoreImportBundle\Command;
 
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use League\Csv\Reader;
-use Pimcore\Console\AbstractCommand;
-use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupKeyRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\KeyRepository;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Pimcore\Console\AbstractCommand;
+use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
 
 
 class Import extends AbstractCommand
