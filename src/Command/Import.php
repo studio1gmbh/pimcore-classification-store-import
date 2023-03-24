@@ -19,7 +19,6 @@ use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupKeyRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\KeyRepository;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
