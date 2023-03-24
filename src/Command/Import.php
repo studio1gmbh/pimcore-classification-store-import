@@ -14,6 +14,8 @@ namespace Studio1\ClassificationStoreImportBundle\Command;
 
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use League\Csv\Reader;
+use Pimcore\Console\AbstractCommand;
+use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupKeyRelationRepository;
@@ -22,9 +24,6 @@ use Studio1\ClassificationStoreImportBundle\Classes\KeyRepository;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Pimcore\Console\AbstractCommand;
-use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
-
 
 class Import extends AbstractCommand
 {
@@ -66,7 +65,7 @@ class Import extends AbstractCommand
      */
     public function execute(InputInterface $input, OutputInterface $output): int
     {
-        $monitoringItem = $this->initProcessManager($input->getOption('monitoring-item-id'),['autoCreate' => true]);
+        $monitoringItem = $this->initProcessManager($input->getOption('monitoring-item-id'), ['autoCreate' => true]);
 
         $classFile = '/var/www/html/public/var/assets/import/sap_klassifikation.csv';
         $oReader = Reader::createFromPath($classFile);
@@ -97,9 +96,9 @@ class Import extends AbstractCommand
 
         $storeConfig = StoreConfig::getByName('SapReadonly');
 
-        foreach($GroupAndCollection as $i => $item){
+        foreach ($GroupAndCollection as $i => $item) {
             $monitoringItem->getLogger()->debug('Detailed log info for ' . $item['code']);
-            $monitoringItem->setMessage('Processing ' . $item['code'])->setCurrentWorkload($i+1)->save();
+            $monitoringItem->setMessage('Processing ' . $item['code'])->setCurrentWorkload($i + 1)->save();
 
             $collectionConfig = CollectionRepository::getOrCreateByName($item['nameDe'], $storeConfig->getId());
             $groupConfig = GroupRepository::getOrCreateByName($item, $storeConfig->getId());
@@ -130,6 +129,7 @@ class Import extends AbstractCommand
         }
 
         $monitoringItem->setMessage('Job finished')->setCompleted();
+
         return 0;
     }
 }

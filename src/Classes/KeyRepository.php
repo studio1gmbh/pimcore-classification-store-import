@@ -1,9 +1,17 @@
 <?php
 
+/**
+ * Studio1 Kommunikation GmbH
+ *
+ * This source file is available under following license:
+ * - GNU General Public License v3.0 (GNU GPLv3)
+ *
+ *  @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
+ *  @license    https://www.gnu.org/licenses/gpl-3.0.txt
+ */
+
 namespace Studio1\ClassificationStoreImportBundle\Classes;
 
-use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
-use Pimcore\Logger;
 use Pimcore\Model\DataObject\Classificationstore\KeyConfig;
 
 class KeyRepository
@@ -14,7 +22,9 @@ class KeyRepository
      * @param array $item
      * @param int $storeId
      * @param bool $mergeInputValue
+     *
      * @return KeyConfig
+     *
      * @throws \Exception
      */
     public static function getOrCreateByName(array $item, int $storeId, bool $mergeInputValue, $logger): KeyConfig
@@ -34,11 +44,10 @@ class KeyRepository
             $keyConfig->save();
         }
 
-
-        if(self::getType($item) == 'select') {
+        if (self::getType($item) == 'select') {
             $definition = json_decode($keyConfig->getDefinition(), true);
 
-            if(!key_exists('options', $definition)) {
+            if (!key_exists('options', $definition)) {
                 $definition['options'] = [];
                 $definition['type'] = 'select';
             }
@@ -55,6 +64,7 @@ class KeyRepository
 
     /**
      * @param array $item
+     *
      * @return array
      */
     private static function getDefinition(array $item): string
@@ -66,7 +76,7 @@ class KeyRepository
             'datatype' => 'data'
         ];
 
-        if(self::getType($item) == 'select') {
+        if (self::getType($item) == 'select') {
             $definitionsArray['options'] = self::getOptions($item['values']);
         }
 
@@ -75,13 +85,14 @@ class KeyRepository
 
     /**
      * @param array $item
+     *
      * @return string
      */
     private static function getType(array $item): string
     {
         $type = 'input';
 
-        if(count($item['values']) > 0) {
+        if (count($item['values']) > 0) {
             $type = 'select';
         }
 
@@ -91,6 +102,7 @@ class KeyRepository
     /**
      * @param array $values
      * @param array $options
+     *
      * @return array
      */
     private static function getOptions(array $values, array $options = []): array
