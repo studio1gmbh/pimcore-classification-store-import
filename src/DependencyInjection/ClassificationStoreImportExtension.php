@@ -10,7 +10,7 @@
  *  @license    https://www.gnu.org/licenses/gpl-3.0.txt
  */
 
-namespace Studio1\TemplatePimcoreBundle\DependencyInjection;
+namespace Studio1\ClassificationStoreImportBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  *
  * @link http://symfony.com/doc/current/cookbook/bundles/extension.html
  */
-class TemplatePimcoreExtension extends Extension
+class ClassificationStoreImportExtension extends Extension
 {
     /**
      * {@inheritdoc}
