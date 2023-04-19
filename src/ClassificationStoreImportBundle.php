@@ -14,9 +14,6 @@ namespace Studio1\ClassificationStoreImportBundle;
 
 use Pimcore\Extension\Bundle\AbstractPimcoreBundle;
 
-/**
- *
- */
 class ClassificationStoreImportBundle extends AbstractPimcoreBundle
 {
     /**

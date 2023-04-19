@@ -16,7 +16,6 @@ use Box\Spout\Common\Entity\Row;
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 use Box\Spout\Reader\XLSX\Sheet;
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
-use League\Csv\Reader;
 use Pimcore\Console\AbstractCommand;
 use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
@@ -71,22 +70,23 @@ class ImportClassification extends AbstractCommand
         $monitoringItem = $this->initProcessManager($input->getOption('monitoring-item-id'), ['autoCreate' => true]);
 
         $path = '/var/www/html/public/var/assets/import/HFG_PXM_Klassifikation.xlsx';
-        # open the file
+        // open the file
         $reader = ReaderEntityFactory::createXLSXReader();
         $reader->open($path);
-        # read each cell of each row of each sheet
+        // read each cell of each row of each sheet
         /** @var Sheet $sheet */
         foreach ($reader->getSheetIterator() as $sheet) {
-            if($sheet->getName() != 'PXM Klassen mit Attr.')  {
+            if ($sheet->getName() != 'PXM Klassen mit Attr.') {
                 continue;
             }
             /** @var Row $row */
             foreach ($sheet->getRowIterator() as $row) {
                 $monitoringItem->getLogger()->debug(var_export($row->toArray(), true));
+
                 return 0;
-            #    foreach ($row->getCells() as $cell) {
-            #        var_dump($cell->getValue());
-            #    }
+                //    foreach ($row->getCells() as $cell) {
+            //        var_dump($cell->getValue());
+            //    }
             }
         }
         $reader->close();
