@@ -12,6 +12,9 @@
 
 namespace Studio1\ClassificationStoreImportBundle\Command;
 
+use Box\Spout\Common\Entity\Row;
+use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
+use Box\Spout\Reader\XLSX\Sheet;
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use League\Csv\Reader;
 use Pimcore\Console\AbstractCommand;
@@ -25,7 +28,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Import extends AbstractCommand
+class ImportClassification extends AbstractCommand
 {
     use \Elements\Bundle\ProcessManagerBundle\ExecutionTrait;
 
@@ -42,7 +45,7 @@ class Import extends AbstractCommand
     public function configure(): void
     {
         $this
-            ->setName('studio1:csi:import')
+            ->setName('studio1:csi:import:classification')
             ->setDescription('Import classification store data')
             ->addOption(
                 'monitoring-item-id', null,
@@ -67,34 +70,32 @@ class Import extends AbstractCommand
     {
         $monitoringItem = $this->initProcessManager($input->getOption('monitoring-item-id'), ['autoCreate' => true]);
 
-        $classFile = '/var/www/html/public/var/assets/import/sap_klassifikation.csv';
-        $oReader = Reader::createFromPath($classFile);
-        $oReader->setDelimiter(';');
-        $oReader->setHeaderOffset(0);
-        $GroupAndCollection = $oReader->getRecords([
-            0 => 'ClassificationClass',
-            1 => 'code',
-            2 => 'sapId',
-            3 => 'nameDe',
-            4 => 'superclass',
-        ]);
+        $path = '/var/www/html/public/var/assets/import/HFG_PXM_Klassifikation.xlsx';
+        # open the file
+        $reader = ReaderEntityFactory::createXLSXReader();
+        $reader->open($path);
+        # read each cell of each row of each sheet
+        /** @var Sheet $sheet */
+        foreach ($reader->getSheetIterator() as $sheet) {
+            if($sheet->getName() != 'PXM Klassen mit Attr.')  {
+                continue;
+            }
+            /** @var Row $row */
+            foreach ($sheet->getRowIterator() as $row) {
+                $monitoringItem->getLogger()->debug(var_export($row->toArray(), true));
+                return 0;
+            #    foreach ($row->getCells() as $cell) {
+            #        var_dump($cell->getValue());
+            #    }
+            }
+        }
+        $reader->close();
 
-        $keysFile = '/var/www/html/public/var/assets/import/sap_keys.csv';
-        $oReader = Reader::createFromPath($keysFile);
-        $oReader->setDelimiter(';');
-        $oReader->setHeaderOffset(0);
-        $keys = $oReader->getRecords([
-            0 => 'ClassAttribute',
-            1 => 'classCode',
-            2 => 'code',
-            3 => 'sapId',
-            4 => 'nameDe',
-            5 => 'values',
-        ]);
+        return 0;
 
         $monitoringItem->setMessage('Starting process')->save();
 
-        $storeConfig = StoreConfig::getByName('SapReadonly');
+        $storeConfig = StoreConfig::getByName('HabaClassification');
 
         foreach ($GroupAndCollection as $i => $item) {
             $monitoringItem->getLogger()->debug('Detailed log info for ' . $item['code']);

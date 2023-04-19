@@ -14,24 +14,39 @@ namespace Studio1\ClassificationStoreImportBundle;
 
 use Pimcore\Extension\Bundle\AbstractPimcoreBundle;
 
+/**
+ *
+ */
 class ClassificationStoreImportBundle extends AbstractPimcoreBundle
 {
-    public function getVersion()
+    /**
+     * @return string
+     */
+    public function getVersion(): string
     {
         return '1.0.0';
     }
 
-    public function getNiceName()
+    /**
+     * @return string
+     */
+    public function getNiceName(): string
     {
-        return 'Template Bundle';
+        return 'Studio1 Classification Store Import Bundle';
     }
 
-    public function getDescription()
+    /**
+     * @return string
+     */
+    public function getDescription(): string
     {
-        return 'Template Bundle';
+        return 'Bundle to import classification store';
     }
 
-    public function getJsPaths()
+    /**
+     * @return array|\Pimcore\Routing\RouteReferenceInterface[]|string[]
+     */
+    public function getJsPaths(): array
     {
         return [
         ];
