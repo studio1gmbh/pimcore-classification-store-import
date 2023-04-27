@@ -17,12 +17,12 @@ use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 use Box\Spout\Reader\XLSX\Sheet;
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use Pimcore\Console\AbstractCommand;
+use Pimcore\Model\DataObject\Classificationstore\KeyConfig;
 use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupKeyRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupRepository;
-use Studio1\ClassificationStoreImportBundle\Classes\KeyRepository;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -56,6 +56,10 @@ class ImportClassification extends AbstractCommand
                 InputOption::VALUE_REQUIRED,
                 'Sets the merge select values option',
                 true
+            )->addOption(
+                'import-asset-id', null,
+                InputOption::VALUE_REQUIRED,
+                'Specifies the asset id of the import file'
             );
     }
 
@@ -69,66 +73,214 @@ class ImportClassification extends AbstractCommand
     {
         $monitoringItem = $this->initProcessManager($input->getOption('monitoring-item-id'), ['autoCreate' => true]);
 
-        $path = '/var/www/html/public/var/assets/import/HFG_PXM_Klassifikation.xlsx';
+        $assetId = $input->getOption('import-asset-id');
+        if (!$assetId) {
+            $output->writeln('<error>Asset id is missing</error>');
+
+            return 1;
+        }
+
+        $asset = \Pimcore\Model\Asset::getById($assetId);
+        $path = sprintf('/var/www/html/public/var/assets%s', $asset->getFullPath());
+
         // open the file
         $reader = ReaderEntityFactory::createXLSXReader();
         $reader->open($path);
         // read each cell of each row of each sheet
+
+        $storeConfig = StoreConfig::getByName('HabaClassification');
+
         /** @var Sheet $sheet */
         foreach ($reader->getSheetIterator() as $sheet) {
             if ($sheet->getName() != 'PXM Klassen mit Attr.') {
                 continue;
             }
-            /** @var Row $row */
-            foreach ($sheet->getRowIterator() as $row) {
-                $monitoringItem->getLogger()->debug(var_export($row->toArray(), true));
 
-                return 0;
-                //    foreach ($row->getCells() as $cell) {
-            //        var_dump($cell->getValue());
-            //    }
+            /** @var Row $row */
+            $rowCount = 0;
+            foreach ($sheet->getRowIterator() as $row) {
+                $rowCount++;
+                if ($rowCount == 1) { // skip header
+                    $rowTemplate = $row->toArray();
+                    continue;
+                }
+
+                $data = $row->toArray();
+                if (count($data) != 15) {
+                    $data[] = '';
+                }
+
+                $rowData = array_combine($rowTemplate, $data);
+
+                if ($rowData['Merkmal'] == '') { // Add group collection to tree
+                    continue;
+                }
+
+                $collectionConfig = CollectionRepository::getOrCreateByName($rowData['Hängt an Klasse'], $storeConfig->getId());
+                $groupConfig = GroupRepository::getOrCreateByName([
+                    'code' => $rowData['Hängt an Klasse'],
+                    'sapId' => null
+                ], $storeConfig->getId());
+
+                CollectionGroupRelationRepository::addGroupToCollection($groupConfig->getId(), $collectionConfig->getId());
+
+                if ($rowData['Merkmalstyp'] == 'Push to PXM') {
+                    continue;
+                }
+
+                if ($rowData['Merkmalstyp'] == 'Werteliste') {
+                    continue;
+                }
+
+                if ($rowData['Merkmalstyp'] == 'Dezimalzahl') {
+                    continue;
+                }
+
+                if ($rowData['Merkmalstyp'] == 'Ganzzahl') {
+                    switch ($rowData['Einheit']) {
+                        case 'Stk.':
+                            $unit = 'Stk';
+                            break;
+                        case 'Zoll':
+                            $unit = 'Zoll';
+                            break;
+                        case 'Zeichen':
+                            $unit = 'Zeichen';
+                            break;
+                        default:
+                            $unit = '';
+                    }
+
+                    if ($rowData['Wertigkeit'] == 'mehrwertig') {
+                        $type = 'inputQuantityValue';
+                        $name = sprintf('%s (mehrwertig)', $rowData['Merkmal']);
+                        $definitionsArray = [
+                            'fieldtype' => 'inputQuantityValue',
+                            'name' => $name,
+                            'title' => $name,
+                            'datatype' => 'data',
+                            'defaultUnit' => $unit,
+                            'validUnits' => $unit
+                        ];
+                    } else {
+                        $name = $rowData['Merkmal'];
+                        $type = 'quantityValue';
+
+                        $definitionsArray = [
+                            'name' => $name,
+                            'datatype' => 'data',
+                            'fieldtype' => $type,
+                            'title' => $name,
+                            'tooltip' => '',
+                            'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
+                            'index' => false,
+                            'unique' => false,
+                            'noteditable' => false,
+                            'invisible' => false,
+                            'visibleGridView' => false,
+                            'visibleSearch' => false,
+                            'style' => '',
+                            'width' => '',
+                            'defaultValue' => null,
+                            'defaultValueGenerator' => '',
+                            'decimalSize' => null,
+                            'decimalPrecision' => null,
+                            'integer' => true,
+                            'unsigned' => false,
+                            'minValue' => null,
+                            'maxValue' => null,
+                            'defaultUnit' => $unit,
+                            'validUnits' => $unit
+                        ];
+                    }
+                }
+
+                if ($rowData['Merkmalstyp'] == 'Boolean') {
+                    $type = 'checkbox';
+                    $name = $rowData['Merkmal'];
+
+                    $definitionsArray = [
+                        'name' => $name,
+                        'datatype' => 'data',
+                        'fieldtype' => $type,
+                        'title' => $name,
+                        'tooltip' => '',
+                        'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
+                        'index' => false,
+                        'noteditable' => false,
+                        'invisible' => false,
+                        'visibleGridView' => false,
+                        'visibleSearch' => false,
+                        'style' => '',
+                        'defaultValue' => 0,
+                        'defaultValueGenerator' => '',
+                    ];
+                }
+
+                if ($rowData['Merkmalstyp'] == 'Textfeld') {
+                    if ($rowData['Wertigkeit'] == 'mehrwertig') {
+                        $type = 'textarea';
+                        $name = sprintf('%s (mehrwertig)', $rowData['Merkmal']);
+                        $definitionsArray = [
+                            'fieldtype' => 'input',
+                            'name' => $name,
+                            'title' => $name,
+                            'datatype' => 'data',
+                            'tooltip' => '',
+                            'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
+                            'index' => false,
+                            'unique' => false,
+                            'noteditable' => false,
+                            'invisible' => false,
+                            'visibleGridView' => false,
+                            'visibleSearch' => false,
+                            'style' => '',
+                            'defaultValue' => '',
+                            'defaultValueGenerator' => '',
+                            'width' => '',
+                            'showCharCount' => true
+                        ];
+                    } else {
+                        $name = $rowData['Merkmal'];
+                        $type = 'textarea';
+
+                        $definitionsArray = [
+                            'name' => $name,
+                            'datatype' => 'data',
+                            'fieldtype' => 'input',
+                            'title' => $name,
+                            'tooltip' => '',
+                            'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
+                            'index' => false,
+                            'unique' => false,
+                            'noteditable' => false,
+                            'invisible' => false,
+                            'visibleGridView' => false,
+                            'visibleSearch' => false,
+                            'style' => '',
+                            'defaultValue' => '',
+                            'defaultValueGenerator' => '',
+                            'width' => '',
+                            'showCharCount' => true
+                        ];
+                    }
+                }
+
+                $keyConfig = KeyConfig::getByName($name, $storeConfig->getId(), true);
+                if (!$keyConfig) {
+                    $keyConfig = new KeyConfig();
+                    $keyConfig->setName($name);
+                    $keyConfig->setDescription($name);
+                    $keyConfig->setType($type);
+                    $keyConfig->setStoreId($storeConfig->getId());
+                    $keyConfig->setEnabled(1);
+                    $keyConfig->setDefinition(json_encode($definitionsArray));
+                    $keyConfig->save();
+                }
+                GroupKeyRelationRepository::addKeyToGroup($keyConfig->getId(), $groupConfig->getId());
             }
         }
         $reader->close();
-
-        return 0;
-
-        $monitoringItem->setMessage('Starting process')->save();
-
-        $storeConfig = StoreConfig::getByName('HabaClassification');
-
-        foreach ($GroupAndCollection as $i => $item) {
-            $monitoringItem->getLogger()->debug('Detailed log info for ' . $item['code']);
-            $monitoringItem->setMessage('Processing ' . $item['code'])->setCurrentWorkload($i + 1)->save();
-
-            $collectionConfig = CollectionRepository::getOrCreateByName($item['nameDe'], $storeConfig->getId());
-            $groupConfig = GroupRepository::getOrCreateByName($item, $storeConfig->getId());
-
-            CollectionGroupRelationRepository::addGroupToCollection($groupConfig->getId(), $collectionConfig->getId());
-        }
-
-        foreach ($keys as $i => $key) {
-            $arrayValues = explode('],[', $key['values']);
-            $arrayValues = array_filter($arrayValues);
-            $newArrayValues = [];
-            foreach ($arrayValues as $j => $value) {
-                $value = str_replace(['[', '],'], '', $value);
-                $monitoringItem->getLogger()->debug($value);
-                $value = explode(':', $value);
-                $newArrayValues[] = [
-                    'value' => ($value[0]),
-                    'key' => $value[1]
-                ];
-            }
-
-            $key['values'] = $newArrayValues;
-
-            $keyConfig = KeyRepository::getOrCreateByName($key, $storeConfig->getId(), $input->getOption('merge-select-values'), $monitoringItem->getLogger());
-            $groupConfig = GroupRepository::getByName($key['classCode'], $storeConfig->getId());
-
-            GroupKeyRelationRepository::addKeyToGroup($keyConfig->getId(), $groupConfig->getId());
-        }
-
         $monitoringItem->setMessage('Job finished')->setCompleted();
 
         return 0;

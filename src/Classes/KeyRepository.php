@@ -27,7 +27,7 @@ class KeyRepository
      *
      * @throws \Exception
      */
-    public static function getOrCreateByName(array $item, int $storeId, bool $mergeInputValue, $logger): KeyConfig
+    public static function getOrCreateByName(array $item, int $storeId, bool $mergeInputValue, $logger, $createAsSelection = false): KeyConfig
     {
         self::$mergeInputValue = $mergeInputValue;
 
@@ -37,14 +37,14 @@ class KeyRepository
             $keyConfig = new KeyConfig();
             $keyConfig->setName($item['code']);
             $keyConfig->setDescription($item['sapId']);
-            $keyConfig->setType(self::getType($item));
+            $keyConfig->setType(self::getType($item, $createAsSelection));
             $keyConfig->setStoreId($storeId);
             $keyConfig->setEnabled(1);
             $keyConfig->setDefinition($definition);
             $keyConfig->save();
         }
 
-        if (self::getType($item) == 'select') {
+        if (self::getType($item, $createAsSelection) == 'select') {
             $definition = json_decode($keyConfig->getDefinition(), true);
 
             if (!key_exists('options', $definition)) {
@@ -65,7 +65,7 @@ class KeyRepository
     /**
      * @param array $item
      *
-     * @return array
+     * @return string
      */
     private static function getDefinition(array $item): string
     {
@@ -88,8 +88,12 @@ class KeyRepository
      *
      * @return string
      */
-    private static function getType(array $item): string
+    private static function getType(array $item, $createAsSelection = false): string
     {
+        if ($createAsSelection) {
+            return 'select';
+        }
+
         $type = 'input';
 
         if (count($item['values']) > 0) {

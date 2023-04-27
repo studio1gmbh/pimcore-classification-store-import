@@ -122,7 +122,7 @@ class ImportSAP extends AbstractCommand
 
             $key['values'] = $newArrayValues;
 
-            $keyConfig = KeyRepository::getOrCreateByName($key, $storeConfig->getId(), $input->getOption('merge-select-values'), $monitoringItem->getLogger());
+            $keyConfig = KeyRepository::getOrCreateByName($key, $storeConfig->getId(), $input->getOption('merge-select-values'), $monitoringItem->getLogger(), true);
             $groupConfig = GroupRepository::getByName($key['classCode'], $storeConfig->getId());
 
             GroupKeyRelationRepository::addKeyToGroup($keyConfig->getId(), $groupConfig->getId());
