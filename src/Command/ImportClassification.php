@@ -21,7 +21,6 @@ use Pimcore\Model\DataObject\ClassHabaProduct;
 use Pimcore\Model\DataObject\Classificationstore\GroupConfig;
 use Pimcore\Model\DataObject\Classificationstore\KeyConfig;
 use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
-use Pimcore\Model\DataObject\HabaProduct;
 use Pimcore\Model\DataObject\QuantityValue\Unit;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
@@ -123,10 +122,10 @@ class ImportClassification extends AbstractCommand
                     $productListing->load();
 
                     $group = GroupConfig::getByName($rowData['Hängt an Klasse'], $storeConfig->getId(), true);
-                    if($group) {
+                    if ($group) {
                         foreach ($productListing as $product) {
                             $product->getClassification()->setActiveGroups([$group->getId() => true]);
-                            if(!$product->isPublished()) {
+                            if (!$product->isPublished()) {
                                 $product->setPublished(true);
                             }
                             $product->save();
@@ -364,12 +363,13 @@ class ImportClassification extends AbstractCommand
 
     /**
      * @param string $einheit
+     *
      * @return string
      */
     private function getUnit(string $einheit): string
     {
         $value = Unit::getByAbbreviation($einheit);
-        if(!$value) {
+        if (!$value) {
             $value = Unit::create();
             $value->setAbbreviation($einheit);
             $value->setId($einheit);
@@ -383,12 +383,14 @@ class ImportClassification extends AbstractCommand
     /**
      * @param string $merkmal
      * @param $multi
+     *
      * @return string
      */
     private function getValueName(string $merkmal, $multi = ''): string
     {
-        $merkmal = str_replace([' ','_', '.', '(', ')','-','/', '/n'], [''], $merkmal);
-        $merkmal = str_replace(['ä','ö','ü','ß','Ä','Ö','Ü'], ['ae','oe','ue','ss','Ae','Oe','Ue'], $merkmal);
+        $merkmal = str_replace([' ', '_', '.', '(', ')', '-', '/', '/n'], [''], $merkmal);
+        $merkmal = str_replace(['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'], ['ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue'], $merkmal);
+
         return sprintf('value%s%s', $merkmal, $multi);
     }
 }
