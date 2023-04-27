@@ -19,12 +19,10 @@ use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use Pimcore\Console\AbstractCommand;
 use Pimcore\Model\DataObject\Classificationstore\KeyConfig;
 use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
-use Pimcore\Tool\Storage;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupKeyRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupRepository;
-use Studio1\ClassificationStoreImportBundle\Classes\KeyRepository;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -78,6 +76,7 @@ class ImportClassification extends AbstractCommand
         $assetId = $input->getOption('import-asset-id');
         if (!$assetId) {
             $output->writeln('<error>Asset id is missing</error>');
+
             return 1;
         }
 
@@ -107,13 +106,13 @@ class ImportClassification extends AbstractCommand
                 }
 
                 $data = $row->toArray();
-                if(count($data) != 15) {
+                if (count($data) != 15) {
                     $data[] = '';
                 }
 
                 $rowData = array_combine($rowTemplate, $data);
 
-                if($rowData['Merkmal'] == '') { // Add group collection to tree
+                if ($rowData['Merkmal'] == '') { // Add group collection to tree
                     continue;
                 }
 
@@ -125,20 +124,20 @@ class ImportClassification extends AbstractCommand
 
                 CollectionGroupRelationRepository::addGroupToCollection($groupConfig->getId(), $collectionConfig->getId());
 
-                if($rowData['Merkmalstyp'] == 'Push to PXM') {
+                if ($rowData['Merkmalstyp'] == 'Push to PXM') {
                     continue;
                 }
 
-                if($rowData['Merkmalstyp'] == 'Werteliste') {
+                if ($rowData['Merkmalstyp'] == 'Werteliste') {
                     continue;
                 }
 
-                if($rowData['Merkmalstyp'] == 'Dezimalzahl') {
+                if ($rowData['Merkmalstyp'] == 'Dezimalzahl') {
                     continue;
                 }
 
-                if($rowData['Merkmalstyp'] == 'Ganzzahl') {
-                    switch($rowData['Einheit']) {
+                if ($rowData['Merkmalstyp'] == 'Ganzzahl') {
+                    switch ($rowData['Einheit']) {
                         case 'Stk.':
                             $unit = 'Stk';
                             break;
@@ -152,9 +151,9 @@ class ImportClassification extends AbstractCommand
                             $unit = '';
                     }
 
-                    if($rowData['Wertigkeit'] == 'mehrwertig') {
+                    if ($rowData['Wertigkeit'] == 'mehrwertig') {
                         $type = 'inputQuantityValue';
-                        $name = sprintf('%s (mehrwertig)',$rowData['Merkmal']);
+                        $name = sprintf('%s (mehrwertig)', $rowData['Merkmal']);
                         $definitionsArray = [
                             'fieldtype' => 'inputQuantityValue',
                             'name' => $name,
@@ -196,7 +195,7 @@ class ImportClassification extends AbstractCommand
                     }
                 }
 
-                if($rowData['Merkmalstyp'] == 'Boolean') {
+                if ($rowData['Merkmalstyp'] == 'Boolean') {
                     $type = 'checkbox';
                     $name = $rowData['Merkmal'];
 
@@ -218,10 +217,10 @@ class ImportClassification extends AbstractCommand
                     ];
                 }
 
-                if($rowData['Merkmalstyp'] == 'Textfeld') {
-                    if($rowData['Wertigkeit'] == 'mehrwertig') {
+                if ($rowData['Merkmalstyp'] == 'Textfeld') {
+                    if ($rowData['Wertigkeit'] == 'mehrwertig') {
                         $type = 'textarea';
-                        $name = sprintf('%s (mehrwertig)',$rowData['Merkmal']);
+                        $name = sprintf('%s (mehrwertig)', $rowData['Merkmal']);
                         $definitionsArray = [
                             'fieldtype' => 'input',
                             'name' => $name,

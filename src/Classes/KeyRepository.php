@@ -90,7 +90,7 @@ class KeyRepository
      */
     private static function getType(array $item, $createAsSelection = false): string
     {
-        if($createAsSelection) {
+        if ($createAsSelection) {
             return 'select';
         }
 
