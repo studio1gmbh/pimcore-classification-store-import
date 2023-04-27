@@ -17,8 +17,12 @@ use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 use Box\Spout\Reader\XLSX\Sheet;
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use Pimcore\Console\AbstractCommand;
+use Pimcore\Model\DataObject\ClassHabaProduct;
+use Pimcore\Model\DataObject\Classificationstore\GroupConfig;
 use Pimcore\Model\DataObject\Classificationstore\KeyConfig;
 use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
+use Pimcore\Model\DataObject\HabaProduct;
+use Pimcore\Model\DataObject\QuantityValue\Unit;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
 use Studio1\ClassificationStoreImportBundle\Classes\GroupKeyRelationRepository;
@@ -113,6 +117,21 @@ class ImportClassification extends AbstractCommand
                 $rowData = array_combine($rowTemplate, $data);
 
                 if ($rowData['Merkmal'] == '') { // Add group collection to tree
+                    $productListing = new ClassHabaProduct\Listing();
+                    $productListing->filterByKey($rowData['Hängt an Klasse']);
+                    $productListing->setUnpublished(true);
+                    $productListing->load();
+
+                    $group = GroupConfig::getByName($rowData['Hängt an Klasse'], $storeConfig->getId(), true);
+                    if($group) {
+                        foreach ($productListing as $product) {
+                            $product->getClassification()->setActiveGroups([$group->getId() => true]);
+                            if(!$product->isPublished()) {
+                                $product->setPublished(true);
+                            }
+                            $product->save();
+                        }
+                    }
                     continue;
                 }
 
@@ -129,48 +148,105 @@ class ImportClassification extends AbstractCommand
                 }
 
                 if ($rowData['Merkmalstyp'] == 'Werteliste') {
-                    continue;
+                    if ($rowData['Wertigkeit'] == 'mehrwertig') {
+                        $type = 'multiselect';
+                        $name = $this->getValueName($rowData['Merkmal'], 'Multi');
+
+                        $definitionsArray = [
+                            'fieldtype' => 'multiselect',
+                            'name' => $name,
+                            'title' => sprintf('%s (mehrwertig)', $rowData['Merkmal']),
+                            'datatype' => 'data',
+                            'options' => [],
+                            'optionsProviderClass' => '@DynamicSelection',
+                            'renderType' => 'list',
+                            'maxItems' => 0,
+                        ];
+                    } else {
+                        $type = 'select';
+                        $name = $this->getValueName($rowData['Merkmal']);
+
+                        $definitionsArray = [
+                            'fieldtype' => 'select',
+                            'name' => $name,
+                            'title' => $rowData['Merkmal'],
+                            'datatype' => 'data',
+                            'options' => [],
+                            'optionsProviderClass' => '@DynamicSelection'
+                        ];
+                    }
                 }
 
                 if ($rowData['Merkmalstyp'] == 'Dezimalzahl') {
-                    continue;
-                }
-
-                if ($rowData['Merkmalstyp'] == 'Ganzzahl') {
-                    switch ($rowData['Einheit']) {
-                        case 'Stk.':
-                            $unit = 'Stk';
-                            break;
-                        case 'Zoll':
-                            $unit = 'Zoll';
-                            break;
-                        case 'Zeichen':
-                            $unit = 'Zeichen';
-                            break;
-                        default:
-                            $unit = '';
-                    }
+                    $unit = $this->getUnit($rowData['Einheit']);
 
                     if ($rowData['Wertigkeit'] == 'mehrwertig') {
                         $type = 'inputQuantityValue';
-                        $name = sprintf('%s (mehrwertig)', $rowData['Merkmal']);
+                        $name = $this->getValueName($rowData['Merkmal'], 'Multi');
                         $definitionsArray = [
                             'fieldtype' => 'inputQuantityValue',
                             'name' => $name,
-                            'title' => $name,
+                            'title' => sprintf('%s (mehrwertig)', $rowData['Merkmal']),
                             'datatype' => 'data',
                             'defaultUnit' => $unit,
-                            'validUnits' => $unit
+                            'validUnits' => [$unit]
                         ];
                     } else {
-                        $name = $rowData['Merkmal'];
+                        $name = $this->getValueName($rowData['Merkmal']);
                         $type = 'quantityValue';
 
                         $definitionsArray = [
                             'name' => $name,
                             'datatype' => 'data',
                             'fieldtype' => $type,
-                            'title' => $name,
+                            'title' => $rowData['Merkmal'],
+                            'tooltip' => '',
+                            'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
+                            'index' => false,
+                            'unique' => false,
+                            'noteditable' => false,
+                            'invisible' => false,
+                            'visibleGridView' => false,
+                            'visibleSearch' => false,
+                            'style' => '',
+                            'width' => '',
+                            'defaultValue' => null,
+                            'defaultValueGenerator' => '',
+                            'decimalSize' => 10,
+                            'decimalPrecision' => 2,
+                            'integer' => false,
+                            'unsigned' => false,
+                            'minValue' => null,
+                            'maxValue' => null,
+                            'defaultUnit' => $unit,
+                            'validUnits' => [$unit]
+                        ];
+                    }
+                }
+
+                if ($rowData['Merkmalstyp'] == 'Ganzzahl') {
+                    $unit = $this->getUnit($rowData['Einheit']);
+
+                    if ($rowData['Wertigkeit'] == 'mehrwertig') {
+                        $type = 'inputQuantityValue';
+                        $name = $this->getValueName($rowData['Merkmal'], 'Multi');
+                        $definitionsArray = [
+                            'fieldtype' => 'inputQuantityValue',
+                            'name' => $name,
+                            'title' => sprintf('%s (mehrwertig)', $rowData['Merkmal']),
+                            'datatype' => 'data',
+                            'defaultUnit' => $unit,
+                            'validUnits' => [$unit]
+                        ];
+                    } else {
+                        $name = $this->getValueName($rowData['Merkmal']);
+                        $type = 'quantityValue';
+
+                        $definitionsArray = [
+                            'name' => $name,
+                            'datatype' => 'data',
+                            'fieldtype' => $type,
+                            'title' => $rowData['Merkmal'],
                             'tooltip' => '',
                             'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
                             'index' => false,
@@ -190,20 +266,20 @@ class ImportClassification extends AbstractCommand
                             'minValue' => null,
                             'maxValue' => null,
                             'defaultUnit' => $unit,
-                            'validUnits' => $unit
+                            'validUnits' => [$unit]
                         ];
                     }
                 }
 
                 if ($rowData['Merkmalstyp'] == 'Boolean') {
                     $type = 'checkbox';
-                    $name = $rowData['Merkmal'];
+                    $name = $this->getValueName($rowData['Merkmal']);
 
                     $definitionsArray = [
                         'name' => $name,
                         'datatype' => 'data',
                         'fieldtype' => $type,
-                        'title' => $name,
+                        'title' => $rowData['Merkmal'],
                         'tooltip' => '',
                         'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
                         'index' => false,
@@ -220,11 +296,11 @@ class ImportClassification extends AbstractCommand
                 if ($rowData['Merkmalstyp'] == 'Textfeld') {
                     if ($rowData['Wertigkeit'] == 'mehrwertig') {
                         $type = 'textarea';
-                        $name = sprintf('%s (mehrwertig)', $rowData['Merkmal']);
+                        $name = $this->getValueName($rowData['Merkmal'], 'Multi');
                         $definitionsArray = [
                             'fieldtype' => 'input',
                             'name' => $name,
-                            'title' => $name,
+                            'title' => sprintf('%s (mehrwertig)', $rowData['Merkmal']),
                             'datatype' => 'data',
                             'tooltip' => '',
                             'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
@@ -241,14 +317,14 @@ class ImportClassification extends AbstractCommand
                             'showCharCount' => true
                         ];
                     } else {
-                        $name = $rowData['Merkmal'];
+                        $name = $this->getValueName($rowData['Merkmal']);
                         $type = 'textarea';
 
                         $definitionsArray = [
                             'name' => $name,
                             'datatype' => 'data',
                             'fieldtype' => 'input',
-                            'title' => $name,
+                            'title' => $rowData['Merkmal'],
                             'tooltip' => '',
                             'mandatory' => $rowData['Pflicht'] == 'Ja' ? true : false,
                             'index' => false,
@@ -270,7 +346,7 @@ class ImportClassification extends AbstractCommand
                 if (!$keyConfig) {
                     $keyConfig = new KeyConfig();
                     $keyConfig->setName($name);
-                    $keyConfig->setDescription($name);
+                    $keyConfig->setDescription($rowData['Merkmal']);
                     $keyConfig->setType($type);
                     $keyConfig->setStoreId($storeConfig->getId());
                     $keyConfig->setEnabled(1);
@@ -284,5 +360,35 @@ class ImportClassification extends AbstractCommand
         $monitoringItem->setMessage('Job finished')->setCompleted();
 
         return 0;
+    }
+
+    /**
+     * @param string $einheit
+     * @return string
+     */
+    private function getUnit(string $einheit): string
+    {
+        $value = Unit::getByAbbreviation($einheit);
+        if(!$value) {
+            $value = Unit::create();
+            $value->setAbbreviation($einheit);
+            $value->setId($einheit);
+            $value->setLongname($einheit);
+            $value->save();
+        }
+
+        return $value->getId();
+    }
+
+    /**
+     * @param string $merkmal
+     * @param $multi
+     * @return string
+     */
+    private function getValueName(string $merkmal, $multi = ''): string
+    {
+        $merkmal = str_replace([' ','_', '.', '(', ')','-','/', '/n'], [''], $merkmal);
+        $merkmal = str_replace(['ä','ö','ü','ß','Ä','Ö','Ü'], ['ae','oe','ue','ss','Ae','Oe','Ue'], $merkmal);
+        return sprintf('value%s%s', $merkmal, $multi);
     }
 }
