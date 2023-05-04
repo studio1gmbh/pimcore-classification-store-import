@@ -124,7 +124,7 @@ class ImportClassification extends AbstractCommand
                     $group = GroupConfig::getByName($rowData['Hängt an Klasse'], $storeConfig->getId(), true);
                     if ($group) {
                         foreach ($productListing as $product) {
-                            $product->getClassification()->setActiveGroups([$group->getId() => true]);
+                            $product->getHabaClassification()->setActiveGroups([$group->getId() => true]);
                             if (!$product->isPublished()) {
                                 $product->setPublished(true);
                             }
