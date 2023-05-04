@@ -19,16 +19,8 @@ use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use Pimcore\Console\AbstractCommand;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassHabaProduct;
-use Pimcore\Model\DataObject\Classificationstore\GroupConfig;
-use Pimcore\Model\DataObject\Classificationstore\KeyConfig;
-use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
 use Pimcore\Model\DataObject\Folder;
-use Pimcore\Model\DataObject\QuantityValue\Unit;
 use Pimcore\Model\Version as Version;
-use Studio1\ClassificationStoreImportBundle\Classes\CollectionGroupRelationRepository;
-use Studio1\ClassificationStoreImportBundle\Classes\CollectionRepository;
-use Studio1\ClassificationStoreImportBundle\Classes\GroupKeyRelationRepository;
-use Studio1\ClassificationStoreImportBundle\Classes\GroupRepository;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -127,17 +119,16 @@ class ImportValueRangeValues extends AbstractCommand
                 // - Ermitteln der Strukturordner
                 // - Zuweisung der Ids zu den Strukturordnern
 
+                $folder = DataObject::getByPath(sprintf('/Wertelisten/%s', $this->getValueName($rowData['MerkmalsName'])));
+                if (!$folder) {
+                    $folder = new Folder();
+                    $folder->setParentId($parentId);
+                    $folder->setKey($this->getValueName($rowData['MerkmalsName']));
+                    $folder->save();
+                }
 
-                 $folder = DataObject::getByPath(sprintf('/Wertelisten/%s', $this->getValueName($rowData['MerkmalsName'])));
-                 if(!$folder) {
-                     $folder = new Folder();
-                     $folder->setParentId($parentId);
-                     $folder->setKey($this->getValueName($rowData['MerkmalsName']));
-                     $folder->save();
-                 }
-
-                 $value = DataObject::getByPath(sprintf('/Wertelisten/%s/%s', $this->getValueName($rowData['MerkmalsName']), $this->getValueName($rowData['Vorgabewert'])));
-                 if(!$value) {
+                $value = DataObject::getByPath(sprintf('/Wertelisten/%s/%s', $this->getValueName($rowData['MerkmalsName']), $this->getValueName($rowData['Vorgabewert'])));
+                if (!$value) {
                     $value = new DataObject\ClassSelection();
                     $value->setParentId($folder->getId());
                     $value->setKey($this->getValueName($rowData['Vorgabewert']));
@@ -145,20 +136,20 @@ class ImportValueRangeValues extends AbstractCommand
                     $value->setSelectionValue($rowData['Vorgabewert']);
                     $value->setPublished(true);
                     $value->save();
-                 }
+                }
 
                 $productListing = new ClassHabaProduct\Listing();
                 $productListing->filterByKey($rowData['Hängt an Klasse']);
                 $productListing->load();
 
-                foreach($productListing as $product) {
+                foreach ($productListing as $product) {
                     $property = $product->getProperty($this->getValueName($rowData['MerkmalsName']));
 
                     $monitoringItem->getLogger()->debug($property);
 
                     $properties = [];
 
-                    if(strlen($property) !== 0) {
+                    if (strlen($property) !== 0) {
                         $properties = explode(',', $property);
                         $properties[] = $value->getId();
 
