@@ -158,7 +158,7 @@ class ImportClassification extends AbstractCommand
                             'datatype' => 'data',
                             'options' => [],
                             'optionsProviderClass' => '@DynamicSelection',
-                            'renderType' => 'list',
+                            'renderType' => 'tags',
                             'maxItems' => 0,
                         ];
                     } else {
