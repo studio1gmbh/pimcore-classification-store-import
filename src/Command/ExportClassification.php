@@ -12,16 +12,10 @@
 
 namespace Studio1\ClassificationStoreImportBundle\Command;
 
-use Box\Spout\Common\Entity\Row;
-use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
-use Box\Spout\Reader\XLSX\Sheet;
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use Pimcore\Console\AbstractCommand;
 use Pimcore\Model\DataObject;
-use Pimcore\Model\DataObject\ClassHabaProduct;
 use Pimcore\Model\DataObject\Classificationstore\StoreConfig;
-use Pimcore\Model\DataObject\Folder;
-use Pimcore\Model\Version as Version;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -63,6 +57,7 @@ class ExportClassification extends AbstractCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     *
      * @return int
      */
     public function execute(InputInterface $input, OutputInterface $output): int
@@ -74,17 +69,19 @@ class ExportClassification extends AbstractCommand
         $classificationStoreName = $input->getOption('classification-store-name');
         if (!$classificationStoreName) {
             $monitoringItem->setMessage('Job aborted. Classification store name is missing.')->setCompleted();
+
             return 1;
         }
 
         $storeConfig = StoreConfig::getByName($classificationStoreName);
         if (!$storeConfig instanceof StoreConfig) {
             $monitoringItem->setMessage('Job aborted. Classification store not found.')->setCompleted();
+
             return 1;
         }
 
         $exportPath = $input->getOption('export-path');
-        if(!file_exists($exportPath)) {
+        if (!file_exists($exportPath)) {
             $monitoringItem->setMessage('Exportpath not found. Creating.')->setStatus('running');
             mkdir($exportPath, 0777, true);
         }
