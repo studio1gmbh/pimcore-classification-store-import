@@ -6,14 +6,16 @@
  * This source file is available under following license:
  * - GNU General Public License v3.0 (GNU GPLv3)
  *
- *  @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
- *  @license    https://www.gnu.org/licenses/gpl-3.0.txt
+ * @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.txt
  */
 
 namespace Studio1\ClassificationStoreImportBundle\Command;
 
 use Box\Spout\Common\Entity\Row;
+use Box\Spout\Common\Exception\IOException;
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
+use Box\Spout\Reader\Exception\ReaderNotOpenedException;
 use Box\Spout\Reader\XLSX\Sheet;
 use Elements\Bundle\ProcessManagerBundle\Model\MonitoringItem;
 use Pimcore\Console\AbstractCommand;
@@ -35,6 +37,7 @@ class ImportClassification extends AbstractCommand
     use \Elements\Bundle\ProcessManagerBundle\ExecutionTrait;
 
     protected MonitoringItem $monitoringItem;
+    protected bool $update = false;
 
     public function __construct(string $name = null)
     {
@@ -63,14 +66,21 @@ class ImportClassification extends AbstractCommand
                 'import-asset-id', null,
                 InputOption::VALUE_REQUIRED,
                 'Specifies the asset id of the import file'
+            )->addOption(
+                'update', null,
+                InputOption::VALUE_OPTIONAL,
+                'Specifies the asset id of the import file',
+                false
             );
     }
 
     /**
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      *
      * @return int
+     * @throws IOException
+     * @throws ReaderNotOpenedException
      */
     public function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -82,6 +92,8 @@ class ImportClassification extends AbstractCommand
 
             return 1;
         }
+
+        $this->update = $input->getOption('update');
 
         $asset = \Pimcore\Model\Asset::getById($assetId);
         $path = sprintf('/var/www/html/public/var/assets%s', $asset->getFullPath());
@@ -124,7 +136,10 @@ class ImportClassification extends AbstractCommand
                     $group = GroupConfig::getByName($rowData['Hängt an Klasse'], $storeConfig->getId(), true);
                     if ($group) {
                         foreach ($productListing as $product) {
-                            $product->getHabaClassification()->setActiveGroups([$group->getId() => true]);
+                            $activeGroups = $product->getHabaClassification()->getActiveGroups();
+                            $activeGroups[$group->getId()] = true;
+
+                            $product->getHabaClassification()->setActiveGroups($activeGroups);
                             if (!$product->isPublished()) {
                                 $product->setPublished(true);
                             }
@@ -187,6 +202,7 @@ class ImportClassification extends AbstractCommand
                             'name' => $name,
                             'title' => sprintf('%s (mehrwertig)', $rowData['Merkmal']),
                             'datatype' => 'data',
+                            'autoConvert' => true,
                             'defaultUnit' => $unit,
                             'validUnits' => [$unit]
                         ];
@@ -214,6 +230,7 @@ class ImportClassification extends AbstractCommand
                             'decimalSize' => 10,
                             'decimalPrecision' => 2,
                             'integer' => false,
+                            'autoConvert' => true,
                             'unsigned' => false,
                             'minValue' => null,
                             'maxValue' => null,
@@ -234,6 +251,7 @@ class ImportClassification extends AbstractCommand
                             'name' => $name,
                             'title' => sprintf('%s (mehrwertig)', $rowData['Merkmal']),
                             'datatype' => 'data',
+                            'autoConvert' => true,
                             'defaultUnit' => $unit,
                             'validUnits' => [$unit]
                         ];
@@ -261,6 +279,7 @@ class ImportClassification extends AbstractCommand
                             'decimalSize' => null,
                             'decimalPrecision' => null,
                             'integer' => true,
+                            'autoConvert' => true,
                             'unsigned' => false,
                             'minValue' => null,
                             'maxValue' => null,
@@ -349,6 +368,9 @@ class ImportClassification extends AbstractCommand
                     $keyConfig->setType($type);
                     $keyConfig->setStoreId($storeConfig->getId());
                     $keyConfig->setEnabled(1);
+                    $keyConfig->setDefinition(json_encode($definitionsArray));
+                    $keyConfig->save();
+                } else if ($this->update) {
                     $keyConfig->setDefinition(json_encode($definitionsArray));
                     $keyConfig->save();
                 }
