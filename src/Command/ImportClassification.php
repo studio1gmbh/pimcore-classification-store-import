@@ -6,8 +6,8 @@
  * This source file is available under following license:
  * - GNU General Public License v3.0 (GNU GPLv3)
  *
- * @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
- * @license    https://www.gnu.org/licenses/gpl-3.0.txt
+ *  @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
+ *  @license    https://www.gnu.org/licenses/gpl-3.0.txt
  */
 
 namespace Studio1\ClassificationStoreImportBundle\Command;
@@ -79,6 +79,7 @@ class ImportClassification extends AbstractCommand
      * @param OutputInterface $output
      *
      * @return int
+     *
      * @throws IOException
      * @throws ReaderNotOpenedException
      */
@@ -370,7 +371,7 @@ class ImportClassification extends AbstractCommand
                     $keyConfig->setEnabled(1);
                     $keyConfig->setDefinition(json_encode($definitionsArray));
                     $keyConfig->save();
-                } else if ($this->update) {
+                } elseif ($this->update) {
                     $keyConfig->setDefinition(json_encode($definitionsArray));
                     $keyConfig->save();
                 }

@@ -6,8 +6,8 @@
  * This source file is available under following license:
  * - GNU General Public License v3.0 (GNU GPLv3)
  *
- * @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
- * @license    https://www.gnu.org/licenses/gpl-3.0.txt
+ *  @copyright  Copyright (c) Studio1 Kommunikation GmbH (http://www.studio1.de)
+ *  @license    https://www.gnu.org/licenses/gpl-3.0.txt
  */
 
 namespace Studio1\ClassificationStoreImportBundle\Command;
@@ -76,7 +76,9 @@ class ImportProductData extends AbstractCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     *
      * @return int
+     *
      * @throws Exception
      * @throws InvalidArgument
      * @throws UnavailableStream
@@ -90,12 +92,14 @@ class ImportProductData extends AbstractCommand
         $classificationStoreName = $input->getOption('classification-store-name');
         if (!$classificationStoreName) {
             $this->monitoringItem->setMessage('Job aborted. Classification store name is missing.')->setCompleted();
+
             return 1;
         }
 
         $storeConfig = StoreConfig::getByName($classificationStoreName);
         if (!$storeConfig instanceof StoreConfig) {
             $this->monitoringItem->setMessage('Job aborted. Classification store not found.')->setCompleted();
+
             return 1;
         }
 
@@ -104,6 +108,7 @@ class ImportProductData extends AbstractCommand
 
         if (!$importFile instanceof Asset) {
             $this->monitoringItem->setMessage('Job aborted. Import File not found.')->setCompleted();
+
             return 1;
         }
 
@@ -129,6 +134,7 @@ class ImportProductData extends AbstractCommand
 
     /**
      * @param array $datas
+     *
      * @return void
      */
     private function importData(array $datas): void
@@ -136,22 +142,21 @@ class ImportProductData extends AbstractCommand
         if (strlen($datas['Artikelnummer']) !== 0) {
             if ($this->importMode !== 'article') {
                 // an article needs an articleNumber, this is a product
-                #return;
+                //return;
             }
             $identifier = $datas['Artikelnummer'];
         } else {
             if ($this->importMode !== 'product') {
                 // a product must not have an articleNumber, this is an article
-                #return;
+                //return;
             }
             $identifier = $datas['Basisprodukt'];
         }
 
-
         $dataObject = DataObject\ClassHabaProduct::getByProductNumber($identifier, 1);
         if (!$dataObject instanceof DataObject\ClassHabaProduct) {
             // object not found
-            #$this->monitoringItem->getLogger()->debug(sprintf('Dataobject not found: %s', $identifier));
+            //$this->monitoringItem->getLogger()->debug(sprintf('Dataobject not found: %s', $identifier));
             return;
         }
 
@@ -177,7 +182,7 @@ class ImportProductData extends AbstractCommand
                 if (array_key_exists($collectionKey->getConfiguration()->getName(), $importData)) {
                     if ($collectionKey->getConfiguration()->getType() == 'quantityValue') {
                         $valueData = explode(' ', $importData[$collectionKey->getConfiguration()->getName()]);
-                        if(count($valueData) == 2) {
+                        if (count($valueData) == 2) {
                             $valueData[0] = str_replace(',', '.', $valueData[0]);
                             $valueData[1] = str_replace(['Stück'], ['Stk.'], $valueData[1]);
                             $importData[$collectionKey->getConfiguration()->getName()] = new \Pimcore\Model\DataObject\Data\QuantityValue($valueData[0], $valueData[1]);
@@ -188,7 +193,7 @@ class ImportProductData extends AbstractCommand
 
                     if ($collectionKey->getConfiguration()->getType() == 'inputQuantityValue') {
                         $valueData = explode(' ', $importData[$collectionKey->getConfiguration()->getName()]);
-                        if(count($valueData) == 2) {
+                        if (count($valueData) == 2) {
                             $valueData[0] = str_replace(',', '.', $valueData[0]);
                             $valueData[1] = str_replace(['Stück'], ['Stk.'], $valueData[1]);
                             $importData[$collectionKey->getConfiguration()->getName()] = new \Pimcore\Model\DataObject\Data\InputQuantityValue($valueData[0], $valueData[1]);
@@ -197,12 +202,12 @@ class ImportProductData extends AbstractCommand
                         }
                     }
 
-                    if($collectionKey->getConfiguration()->getType() == 'multiselect') {
+                    if ($collectionKey->getConfiguration()->getType() == 'multiselect') {
                         $importData[$collectionKey->getConfiguration()->getName()] = $this->getValueName($importData[$collectionKey->getConfiguration()->getName()]);
                     }
 
                     $objectKeys[$groups->getConfiguration()->getId()][$collectionKey->getConfiguration()->getId()]['default'] = array_key_exists($collectionKey->getConfiguration()->getName(), $importData) ? $importData[$collectionKey->getConfiguration()->getName()] : null;
-                } else if(array_key_exists(str_replace('Multi', '', $collectionKey->getConfiguration()->getName()), $importData)) {
+                } elseif (array_key_exists(str_replace('Multi', '', $collectionKey->getConfiguration()->getName()), $importData)) {
                     if ($collectionKey->getConfiguration()->getType() == 'quantityValue') {
                         $valueData = explode(' ', $importData[str_replace('Multi', '', $collectionKey->getConfiguration()->getName())]);
                         $valueData[0] = str_replace(',', '.', $valueData[0]);
@@ -212,7 +217,7 @@ class ImportProductData extends AbstractCommand
 
                     if ($collectionKey->getConfiguration()->getType() == 'inputQuantityValue') {
                         $valueData = explode(' ', $importData[str_replace('Multi', '', $collectionKey->getConfiguration()->getName())]);
-                        if(count($valueData) == 2) {
+                        if (count($valueData) == 2) {
                             $valueData[0] = str_replace(',', '.', $valueData[0]);
                             $valueData[1] = str_replace(['Stück'], ['Stk.'], $valueData[1]);
                             $importData[$collectionKey->getConfiguration()->getName()] = new \Pimcore\Model\DataObject\Data\InputQuantityValue($valueData[0], $valueData[1]);
@@ -221,7 +226,7 @@ class ImportProductData extends AbstractCommand
                         }
                     }
 
-                    if($collectionKey->getConfiguration()->getType() == 'multiselect') {
+                    if ($collectionKey->getConfiguration()->getType() == 'multiselect') {
                         $objectKeys[$groups->getConfiguration()->getId()][$collectionKey->getConfiguration()->getId()]['default'][] = array_key_exists(str_replace('Multi', '', $collectionKey->getConfiguration()->getName()), $importData) ? $importData[str_replace('Multi', '', $collectionKey->getConfiguration()->getName())] : null;
                         continue;
                     }
@@ -234,7 +239,7 @@ class ImportProductData extends AbstractCommand
 
         if (count($objectKeys) !== 0) {
             $items = $dataObject->getHabaClassification()->getItems();
-            if($items != $objectKeys) {
+            if ($items != $objectKeys) {
                 $objectGroups = $this->extractGroups($objectKeys);
                 $this->monitoringItem->getLogger()->debug(sprintf('Setting active groups: %s', var_export($objectGroups, true)));
 
@@ -274,6 +279,7 @@ class ImportProductData extends AbstractCommand
 
     /**
      * @param $object
+     *
      * @return array
      */
     private function getGroups($object): array
@@ -287,6 +293,7 @@ class ImportProductData extends AbstractCommand
 
     /**
      * @param array $objectKeys
+     *
      * @return array
      */
     private function extractGroups(array $objectKeys): array
