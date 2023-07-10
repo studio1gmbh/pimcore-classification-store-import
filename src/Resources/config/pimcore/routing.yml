@@ -1,0 +1,4 @@
+template-pimcore-bundle:
+    resource: "@ClassificationStoreImportBundle/Controller/"
+    type: annotation
+    prefix: /admin/template-pimcore

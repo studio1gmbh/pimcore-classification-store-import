@@ -1,0 +1,31 @@
+{
+  "name": "studio1/classification-store-import",
+  "type": "pimcore-bundle",
+  "license": "GPL-3.0-or-later",
+  "description": "Bundle to import classification store configuration for Pimcore",
+  "authors": [
+    {
+      "name": "Studio1 Kommunikation GmbH",
+      "email": "info@studio1.de",
+      "homepage": "https://www.studio1.de/",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Studio1\\ClassificationStoreImportBundle\\": "src/"
+    }
+  },
+  "extra": {
+    "pimcore": {
+      "bundles": [
+        "Studio1\\ClassificationStoreImportBundle\\ClassificationStoreImportBundle"
+      ]
+    }
+  },
+  "require": {
+    "pimcore/pimcore": "^10.0",
+    "php": "^8.0",
+    "box/spout": "*"
+  }
+}
