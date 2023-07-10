@@ -123,6 +123,7 @@ class ImportProductData extends AbstractCommand
             $this->monitoringItem->setTotalSteps($oReader->count());
         } catch (SyntaxError $e) {
             $this->monitoringItem->getLogger()->debug(var_export($e->duplicateColumnNames(), true));
+
             return self::FAILURE;
         }
         $i = 1;

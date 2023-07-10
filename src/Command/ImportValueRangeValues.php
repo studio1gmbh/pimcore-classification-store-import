@@ -66,6 +66,7 @@ class ImportValueRangeValues extends AbstractCommand
      * @param OutputInterface $output
      *
      * @return int
+     *
      * @throws IOException
      * @throws ReaderNotOpenedException
      */

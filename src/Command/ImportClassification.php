@@ -136,13 +136,13 @@ class ImportClassification extends AbstractCommand
                     continue;
                 }
 
-                #$collectionConfig = CollectionRepository::getOrCreateByName($rowData['Hängt an Klasse'], $storeConfig->getId());
+                //$collectionConfig = CollectionRepository::getOrCreateByName($rowData['Hängt an Klasse'], $storeConfig->getId());
                 $groupConfig = GroupRepository::getOrCreateByName([
                     'code' => $rowData['Hängt an Klasse'],
                     'sapId' => null
                 ], $storeConfig->getId());
 
-                #CollectionGroupRelationRepository::addGroupToCollection($groupConfig->getId(), $collectionConfig->getId());
+                //CollectionGroupRelationRepository::addGroupToCollection($groupConfig->getId(), $collectionConfig->getId());
 
                 if ($rowData['Merkmalstyp'] == 'Push to PXM') {
                     continue;
@@ -356,11 +356,9 @@ class ImportClassification extends AbstractCommand
                 }
                 GroupKeyRelationRepository::addKeyToGroup($keyConfig->getId(), $groupConfig->getId());
 
-
-
                 $stop++;
-                if($stop > 200) {
-                    #return 0;
+                if ($stop > 200) {
+                    //return 0;
                 }
             }
         }
